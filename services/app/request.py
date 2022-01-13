@@ -4,11 +4,9 @@ import os
 from pathlib import Path
 
 import pandas as pd
-from pandas.core.dtypes import base
 import requests
 
 BASE_URL = os.getenv("BASE_URL", "https://api.esios.ree.es")
-
 
 class UnconfiguredEnvironment(Exception):
     """base class for Missing environment variables"""
@@ -18,9 +16,9 @@ class UnconfiguredEnvironment(Exception):
 
 # sane check for authorization token
 try:
-    PERSONAL_TOKEN = os.getenv("ESIOS_TOKEN")
+    PERSONAL_TOKEN = os.environ["ESIOS_TOKEN"]
 except KeyError as e:
-    raise UnconfiguredEnvironment("PERSONAL_TOKEN environment variable not set")
+    raise UnconfiguredEnvironment("ESIOS_TOKEN environment variable not set")
 
 
 def make_request(request_id: str, params: dict) -> requests.Response:
@@ -67,6 +65,9 @@ def persist_data(r: requests.Response) -> pd.DataFrame:
 
     basepath = Path(__file__).parent.joinpath("data")
     basepath.mkdir(exist_ok=True)
+
+    print(r.url)
+    print(r.status_code)
 
     # save to json
     with open(basepath.joinpath("dump.json"), "wt") as fp:

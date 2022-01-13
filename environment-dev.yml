@@ -1,4 +1,4 @@
-name: aiguasol
+name: esios-dev
 channels:
   - conda-forge
   - defaults

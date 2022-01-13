@@ -6,12 +6,15 @@ services:
     build:
       context: ./services/app
       dockerfile: Dockerfile
+      args:
+        ESIOS_TOKEN: ${ESIOS_TOKEN}
     image: esio-streamlit:latest
     restart: always
     ports:
       - "8501:8501"
     networks:
       - esios_nw
+    env_file: .env
 
 networks:
   esios_nw:
