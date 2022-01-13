@@ -6,6 +6,17 @@ from pathlib import Path
 import pandas as pd
 import requests
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s %(message)s",
+    datefmt="[%Y-%m-%d %H:%M:%S]",
+)
+
+logger = logging.getLogger(__name__)
+
+
 BASE_URL = os.getenv("BASE_URL", "https://api.esios.ree.es")
 
 class UnconfiguredEnvironment(Exception):
@@ -45,8 +56,15 @@ def make_request(request_id: str, params: dict) -> requests.Response:
     # base url of the request
     INDICATOR_URL = BASE_URL + f"/indicators/{request_id}"
 
+    logger.debug(INDICATOR_URL)
+
     # make the request
+    logger.info("Issuing GET request to esios API")
     r = requests.get(INDICATOR_URL, headers=headers, params=params)
+    logger.debug(r.status_code)
+    logger.debug(r.url)
+    if r.status_code == 200:
+        logger.info(f"Success")
 
     return r
 
@@ -63,21 +81,25 @@ def persist_data(r: requests.Response) -> pd.DataFrame:
         pd.DataFrame: a dataframe of the subset extracted from the JSON response
     """
 
+
     basepath = Path(__file__).parent.joinpath("data")
+    logger.info(f"Creating directory in {basepath} if it does not exist")
     basepath.mkdir(exist_ok=True)
 
-    print(r.url)
-    print(r.status_code)
-
     # save to json
+    logger.info(f"Saving raw JSON file in {basepath.joinpath('dump.json')}")
     with open(basepath.joinpath("dump.json"), "wt") as fp:
         json.dump(r.json(), fp)
 
     # let the method fail with KeyError explicitly
+    
+    logger.info("Extracting data from JSON file")
     r_values = r.json()["indicator"]["values"]
 
     # save as csv
     df = pd.DataFrame(r_values)
+
+    logger.info(f"Saving CSV file in {basepath.joinpath('data.csv')}")
     df.to_csv(basepath.joinpath("data.csv"))
 
     return df
@@ -105,3 +127,5 @@ if __name__ == "__main__":
 
     r = make_request(id_request, params)
     persist_data(r)
+
+    logger.info("Done")

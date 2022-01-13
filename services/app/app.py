@@ -1,3 +1,4 @@
+import datetime as dt
 import typing as T
 from pathlib import Path
 
@@ -6,9 +7,18 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from scipy import fft
+import logging
 
 PATH_DATA = Path(__file__).parent.joinpath("data", "data.csv")
 
+# manage logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s %(message)s",
+    datefmt="[%Y-%m-%d %H:%M:%S]",
+)
+
+logger = logging.getLogger(__name__)
 
 @st.cache
 def read_csv(path: T.Optional[Path]) -> pd.DataFrame:
@@ -40,9 +50,18 @@ def plot_time(df: pd.DataFrame) -> T.Tuple[plt.Figure, plt.Axes]:
 
     return fig, ax
 
+
 @st.cache
 def compute_fft(df: pd.DataFrame) -> np.ndarray:
     return fft.fft(df["value"].values)
+
+
+def narrow_df(
+    df: pd.DataFrame, start_time: dt.datetime, end_time: dt.datetime
+) -> pd.DataFrame:
+    # simple wrapper to keep track of functionality
+    df = df.loc[start_time:end_time]
+    return df
 
 
 def plot_frequency(df: pd.DataFrame) -> T.Tuple[plt.Figure, plt.Axes]:
@@ -96,14 +115,12 @@ def plot_frequency(df: pd.DataFrame) -> T.Tuple[plt.Figure, plt.Axes]:
 
     return fig, ax
 
-
 df = read_csv(PATH_DATA)
 
 st.title("Daily aggregated demand in Spain")
 
 st.header("About")
 
-# github
 st.write(
     """Plots of the daily aggregated demand in Spain between 2018/09/02 and 2018/10/06 in time and frequency domain. 
     
@@ -118,6 +135,17 @@ https://api.esios.ree.es/indicators/1293?locale=es&start_date=2018-09-02T00%3A00
 ```
 """
 )
+
+
+options = df.index.unique().tolist()
+start_time, end_time = st.select_slider(
+    "Slide to select start and end times", options=options, value=(options[0], options[-1])
+)
+
+st.write(end_time - start_time)
+
+# adjust the df
+df = narrow_df(df, start_time=start_time, end_time=end_time)
 
 st.subheader("Time domain")
 fig, ax = plot_time(df)
