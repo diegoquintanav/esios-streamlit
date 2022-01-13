@@ -22,3 +22,5 @@ Code and notebooks for the a small streamlit app that requests demand data from 
 4. You should be able to interact with the app
 
 ![example-app](./resources/app-example.png)
+![example-time](./resources/time.png)
+![example-freq](./resources/freq.png)
