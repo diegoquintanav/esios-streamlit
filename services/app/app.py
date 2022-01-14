@@ -94,10 +94,7 @@ def plot_frequency(df: pd.DataFrame) -> T.Tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(20, 10))
     ax.step(freqs_per_year, np.abs(fft_values), where="pre")
 
-    # format
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-
+    # plot ticks for specific frequencies
     ticks = [1, 365.2524, 365.2524 * 24, 365.2524 * 24 * 6]
     labels = ["1/Year", "1/day", "1/hour", "1/10min"]
 
@@ -108,6 +105,10 @@ def plot_frequency(df: pd.DataFrame) -> T.Tuple[plt.Figure, plt.Axes]:
             x=tick * 0.75, y=ax.get_ylim()[1] * 0.075, s=label, size=20, rotation=90
         )
 
+    # format axes
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
     ax.set_xlabel("Frequency [Hz] (log scale)", size=20)
     ax.set_ylabel("Amplitude (log scale)", size=20)
 
@@ -115,14 +116,13 @@ def plot_frequency(df: pd.DataFrame) -> T.Tuple[plt.Figure, plt.Axes]:
 
     return fig, ax
 
+# load csv
 df = read_csv(PATH_DATA)
 
-st.title("Daily aggregated demand in Spain")
-
+st.title("Aggregated demand in Spain")
 st.header("About")
-
 st.write(
-    """Plots of the daily aggregated demand in Spain between 2018/09/02 and 2018/10/06 in time and frequency domain. 
+    """Plots of the aggregated demand in Spain between 2018/09/02 and 2018/10/06 in time and frequency domain. 
     
 Find the original repo in [github](https://github.com/diegoquintanav/esios-streamlit). 
 The data was obtained from [Red eléctrica de España](https://www.esios.ree.es/es/analisis/1293?vis=1&start_date=02-09-2018T00%3A00&end_date=06-10-2018T23%3A50&compare_start_date=01-09-2018T00%3A00&groupby=minutes10&level=1&zoom=6&latlng=40.91351257612758,-1.8896484375) 
@@ -136,24 +136,28 @@ https://api.esios.ree.es/indicators/1293?locale=es&start_date=2018-09-02T00%3A00
 """
 )
 
-
+# create sliders
 options = df.index.unique().tolist()
 start_time, end_time = st.select_slider(
     "Slide to select start and end times", options=options, value=(options[0], options[-1])
 )
 
+# display difference in time
 st.write(end_time - start_time)
 
-# adjust the df
+# adjust/reduce the df
 df = narrow_df(df, start_time=start_time, end_time=end_time)
 
+# plot in time domain
 st.subheader("Time domain")
 fig, ax = plot_time(df)
 st.pyplot(fig)
 
+# plot in frequency domain
 st.subheader("Frequency domain")
 fig, ax = plot_frequency(df)
 st.pyplot(fig)
 
+# display dataframe
 st.subheader("Data")
 st.dataframe(df)

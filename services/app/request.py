@@ -63,8 +63,12 @@ def make_request(request_id: str, params: dict) -> requests.Response:
     r = requests.get(INDICATOR_URL, headers=headers, params=params)
     logger.debug(r.status_code)
     logger.debug(r.url)
+
     if r.status_code == 200:
         logger.info(f"Success")
+    else:
+        logger.error(f"Error {r.status_code}")
+        logger.error(r.text)
 
     return r
 
@@ -80,7 +84,6 @@ def persist_data(r: requests.Response) -> pd.DataFrame:
     Returns:
         pd.DataFrame: a dataframe of the subset extracted from the JSON response
     """
-
 
     basepath = Path(__file__).parent.joinpath("data")
     logger.info(f"Creating directory in {basepath} if it does not exist")
